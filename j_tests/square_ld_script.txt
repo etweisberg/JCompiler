@@ -1,0 +1,5 @@
+clear
+reset
+ld os
+ld square
+break set TRAP_HALT
