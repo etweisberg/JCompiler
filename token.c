@@ -3,8 +3,12 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#ifndef TOKEN_H_
 #include "token.h"
+#endif
+#ifndef HW7_DEQUE_H_
 #include "Deque.h"
+#endif
 
 bool next_token(FILE *j_file, token *output)
 {
@@ -12,7 +16,7 @@ bool next_token(FILE *j_file, token *output)
     if (fscanf(j_file, "%s", j_token) == 1)
     {
         // ignoring comments
-        while (strcmp(j_token, ";;") == 0)
+        while (strcmp(j_token, ";;") == 0 || strcmp(j_token, ";") == 0)
         {
             int c;
             c = fgetc(j_file);

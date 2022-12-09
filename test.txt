@@ -1,1 +1,1 @@
- defun  main  5  3  2  *  +  printnum  endl  3  4  5  rot  *  +  printnum  endl  return 
+ defun  testIfs  arg1  dup  10  gt  if  dup  5  gt  if  11  else  12  endif  else  dup  20  gt  if  13  else  14  endif  endif  return  defun  main  8  testIfs  printnum  endl  4  testIfs  printnum  endl  45  testIfs  printnum  endl  return 

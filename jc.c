@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#ifndef TOKEN_H_
 #include "token.h"
+#endif
+#ifndef HW7_DEQUE_H_
 #include "Deque.h"
+#endif
 
 int main(int argc, char **argv)
 {
