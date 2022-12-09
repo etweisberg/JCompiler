@@ -26,7 +26,12 @@ bool next_token(FILE *j_file, token *output)
             }
             fscanf(j_file, "%s", j_token);
         }
-        if (sscanf(j_token, "%d", &(output->literal_value)) == 1)
+        if (strstr(j_token, "0x") != NULL)
+        {
+            output->type = LITERAL;
+            sscanf(j_token, "%x", &(output->literal_value));
+        }
+        else if (sscanf(j_token, "%d", &(output->literal_value)) == 1)
         {
             output->type = LITERAL;
         }
@@ -135,14 +140,6 @@ bool next_token(FILE *j_file, token *output)
                 memmove(&j_token[0], &j_token[0 + 1], strlen(j_token) - 0);
                 memmove(&j_token[0], &j_token[0 + 1], strlen(j_token) - 0);
                 output->arg_no = atoi(j_token);
-            }
-            else if (strstr(j_token, "0X") != NULL)
-            {
-                output->type = LITERAL;
-                memmove(&j_token[0], &j_token[0 + 1], strlen(j_token) - 0);
-                memmove(&j_token[0], &j_token[0 + 1], strlen(j_token) - 0);
-                int number = (int)strtol(j_token, NULL, 16);
-                output->literal_value = number;
             }
             else
             {
