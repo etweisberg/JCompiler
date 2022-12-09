@@ -1,1 +1,1 @@
- defun  testIfs  arg1  dup  10  gt  if  dup  5  gt  if  11  else  12  endif  else  dup  20  gt  if  13  else  14  endif  endif  return  defun  main  8  testIfs  printnum  endl  4  testIfs  printnum  endl  45  testIfs  printnum  endl  return 
+ defun  main  5  6  10  500  ge  if  ge  if  31744  20  100  100  14  lc4_draw_rect  endif  else  13056  20  100  swap  100  14  lc4_draw_rect  endif  return 
