@@ -48,7 +48,7 @@ bool next_token(FILE *j_file, token *output)
             {
                 output->type = DIV;
             }
-            else if (strcmp(j_token, "%%") == 0)
+            else if (strcmp(j_token, "%") == 0)
             {
                 output->type = MOD;
             }
