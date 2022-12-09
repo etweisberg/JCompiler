@@ -4,7 +4,6 @@
 #include <ctype.h>
 #include <string.h>
 #include "token.h"
-#include "Deque.h"
 
 bool next_token(FILE *j_file, token *output)
 {
