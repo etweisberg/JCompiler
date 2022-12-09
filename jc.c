@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "token.h"
+#include "Deque.h"
 
 int main(int argc, char **argv)
 {
