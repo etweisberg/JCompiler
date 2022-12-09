@@ -9,16 +9,18 @@
 bool next_token(FILE *j_file, token *output)
 {
     char j_token[MAX_TOKEN_LENGTH + 1];
-    if (fscanf(j_file, " %s ", j_token) == 1)
+    if (fscanf(j_file, "%s", j_token) == 1)
     {
         // ignoring comments
         while (strcmp(j_token, ";;") == 0)
         {
             int c;
-            while ((c = fgetc(j_file)) != '\n')
+            c = fgetc(j_file);
+            while (c != '\n')
             {
+                c = fgetc(j_file);
             }
-            fscanf(j_file, " %s ", j_token);
+            fscanf(j_file, "%s", j_token);
         }
         if (sscanf(j_token, "%d", &(output->literal_value)) == 1)
         {
@@ -268,7 +270,6 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func)
             *defining_func = false;
             // make new label and stack frame
             // prologue
-            printf("%s\n", to_write.str);
             fprintf(asm_file, "%s\n", to_write.str);
             fprintf(asm_file, "\tSTR R7, R6, #-2\n"); // save return address
             fprintf(asm_file, "\tSTR R5, R6, #-3\n"); // save base pointer
@@ -280,7 +281,7 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func)
             // jump to old label
             fprintf(asm_file, "\tJSR %s\n", to_write.str);
         }
-
+        break;
     case RETURN:
         // function epilogue
         // 1) store result in designated RV slot
@@ -294,7 +295,62 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func)
         fprintf(asm_file, "\tLDR R5, R6, #-3\n"); // restore frame pointer
         fprintf(asm_file, "\tLDR R7, R6, #-2\n");
         fprintf(asm_file, "\tRET\n");
-
+        break;
+    case PLUS:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tLDR R1, R6, #1\n");
+        fprintf(asm_file, "\tADD R1, R1, R0\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tSTR R1, R6, #0\n");
+        break;
+    case MUL:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tLDR R1, R6, #1\n");
+        fprintf(asm_file, "\tMUL R1, R1, R0\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tSTR R1, R6, #0\n");
+        break;
+    case MINUS:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tLDR R1, R6, #1\n");
+        fprintf(asm_file, "\tSUB R1, R1, R0\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tSTR R1, R6, #0\n");
+        break;
+    case DIV:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tLDR R1, R6, #1\n");
+        fprintf(asm_file, "\tDIV R1, R1, R0\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tSTR R1, R6, #0\n");
+        break;
+    case MOD:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tLDR R1, R6, #1\n");
+        fprintf(asm_file, "\tMOD R1, R1, R0\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tSTR R1, R6, #0\n");
+        break;
+    case AND:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tLDR R1, R6, #1\n");
+        fprintf(asm_file, "\tAND R1, R1, R0\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tSTR R1, R6, #0\n");
+        break;
+    case OR:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tLDR R1, R6, #1\n");
+        fprintf(asm_file, "\tOR R1, R1, R0\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tSTR R1, R6, #0\n");
+        break;
+    case NOT:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tNOT R0, R0\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tSTR R1, R6, #0\n");
+        break;
     default:
         break;
     }
