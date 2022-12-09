@@ -11,3 +11,6 @@ token.o: token.c token.h
 
 deque.o: Deque.c Deque.h
 	gcc -g -Wall -std=c11 -c Deque.c
+
+clean:
+	rm -f *.o jc
