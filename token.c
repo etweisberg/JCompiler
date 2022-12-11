@@ -3,13 +3,10 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#ifndef TOKEN_H_
 #include "token.h"
-#endif
 #ifndef HW7_DEQUE_H_
 #include "Deque.h"
 #endif
-
 bool next_token(FILE *j_file, token *output)
 {
     char j_token[MAX_TOKEN_LENGTH + 1];
@@ -401,10 +398,10 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if
         }
         break;
     case ENDIF:
-        int nested_if_level;
-        int nested_else_level;
         if (Deque_Size(if_stack) > 1)
         {
+            int nested_if_level;
+            int nested_else_level;
             fprintf(asm_file, "ENDIF_%d:\n", nested_if_level);
             fprintf(asm_file, "\tJMP ENDIF_%d\n", nested_if_level - 1);
             Deque_Pop_Front(if_stack, &nested_if_level);
@@ -412,6 +409,8 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if
         }
         else
         {
+            int nested_if_level;
+            int nested_else_level;
             fprintf(asm_file, "ENDIF_%d:\n", nested_if_level);
             Deque_Pop_Front(if_stack, &nested_if_level);
             Deque_Pop_Front(else_stack, &nested_else_level);
@@ -437,9 +436,9 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if
             Deque_Push_Front(while_stack, nested_level + 1);
         }
     case ENDWHILE:
-        int nested_while_level;
         if (Deque_Size(while_stack) > 1)
         {
+            int nested_while_level;
             Deque_Pop_Front(while_stack, &nested_while_level);
             fprintf(asm_file, "\tLDR R0, R6, #0\n");
             fprintf(asm_file, "\tADD R6, R6, #1\n");
@@ -449,6 +448,7 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if
         }
         else
         {
+            int nested_while_level;
             Deque_Pop_Front(while_stack, &nested_while_level);
             fprintf(asm_file, "\tLDR R0, R6, #0\n");
             fprintf(asm_file, "\tADD R6, R6, #1\n");

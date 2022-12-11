@@ -3,6 +3,10 @@
  */
 
 // the maximum length of a token is 250
+#ifndef HW7_DEQUE_H_
+#include "Deque.h"
+#endif
+
 #ifndef TOKEN_H_
 #define TOKEN_H_
 
