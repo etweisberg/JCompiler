@@ -18,6 +18,7 @@ int main(int argc, char **argv)
     FILE *asm_output = fopen(strcat(name, ".asm"), "w");
     token output_t;
     bool defining_func = false;
+    bool args = false;
     fprintf(asm_output, "\t.CODE\n\t.FALIGN\n");
     while (next_token(input, &output_t))
     {

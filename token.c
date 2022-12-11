@@ -361,9 +361,11 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func)
         fprintf(asm_file, "\tADD R6, R6, #1\n");
         fprintf(asm_file, "\tSTR R1, R6, #0\n");
         break;
-    // function arguments
-    // 1) how do we know how many args there are?
-    // 2) where are arguments found in memory? do we use R5?
+    case ARG:
+        fprintf(asm_file, "\tADD R0, R5, #2\n");
+        fprintf(asm_file, "\tLDR R0, R0, #%d\n", to_write.arg_no);
+        fprintf(asm_file, "\tSTR R0, R6, #-1\n");
+        fprint(asm_file, "\tADD R6, R6, #-1\n");
     default:
         break;
     }
