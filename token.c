@@ -283,7 +283,7 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func)
         {
             *defining_func = false;
             // make new label and stack frame
-            // prologue
+            // function prologue
             fprintf(asm_file, "%s\n", to_write.str);
             fprintf(asm_file, "\tSTR R7, R6, #-2\n"); // save return address
             fprintf(asm_file, "\tSTR R5, R6, #-3\n"); // save base pointer
@@ -298,16 +298,12 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func)
         break;
     case RETURN:
         // function epilogue
-        // 1) store result in designated RV slot
-        // 2) retrieve previous RA
-        // 3) restore prev FP
-        // 4) set SP to top of caller's stack frame
-        fprintf(asm_file, "\tADD R6, R5, #0\n"); // popping locals
+        fprintf(asm_file, "\tLDR R7, R5, #-2\n"); // saving return value
+        fprintf(asm_file, "\tADD R6, R5, #0\n");  // popping locals
         fprintf(asm_file, "\tADD R6, R6, #3\n");
-        fprintf(asm_file, "\tLDR R7, R6, #0\n");  // saving value from top of stack
         fprintf(asm_file, "\tSTR R7, R6, #-1\n"); // store return value
         fprintf(asm_file, "\tLDR R5, R6, #-3\n"); // restore frame pointer
-        fprintf(asm_file, "\tLDR R7, R6, #-2\n");
+        fprintf(asm_file, "\tLDR R7, R6, #-2\n"); // restore return address
         fprintf(asm_file, "\tRET\n");
         break;
     case PLUS:
@@ -365,6 +361,9 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func)
         fprintf(asm_file, "\tADD R6, R6, #1\n");
         fprintf(asm_file, "\tSTR R1, R6, #0\n");
         break;
+    // function arguments
+    // 1) how do we know how many args there are?
+    // 2) where are arguments found in memory? do we use R5?
     default:
         break;
     }
