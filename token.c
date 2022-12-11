@@ -374,7 +374,7 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if
         }
         else
         {
-            int nested_level;
+            int nested_level = 0;
             fprintf(asm_file, "\tLDR R0, R6, #0\n");
             fprintf(asm_file, "\tADD R6, R6, #1\n");
             Deque_Peek_Front(if_stack, &nested_level);
@@ -390,7 +390,7 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if
         }
         else
         {
-            int nested_level;
+            int nested_level = 0;
             Deque_Peek_Front(else_stack, &nested_level);
             fprintf(asm_file, "\tJMP ENDIF_%d\n", nested_level);
             fprintf(asm_file, "ELSE_%d:\n", nested_level);
@@ -400,8 +400,8 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if
     case ENDIF:
         if (Deque_Size(if_stack) > 1)
         {
-            int nested_if_level;
-            int nested_else_level;
+            int nested_if_level = 0;
+            int nested_else_level = 0;
             fprintf(asm_file, "ENDIF_%d:\n", nested_if_level);
             fprintf(asm_file, "\tJMP ENDIF_%d\n", nested_if_level - 1);
             Deque_Pop_Front(if_stack, &nested_if_level);
@@ -409,8 +409,8 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if
         }
         else
         {
-            int nested_if_level;
-            int nested_else_level;
+            int nested_if_level = 0;
+            int nested_else_level = 0;
             fprintf(asm_file, "ENDIF_%d:\n", nested_if_level);
             Deque_Pop_Front(if_stack, &nested_if_level);
             Deque_Pop_Front(else_stack, &nested_else_level);
@@ -427,7 +427,7 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if
         }
         else
         {
-            int nested_level;
+            int nested_level = 0;
             Deque_Peek_Front(while_stack, &nested_level);
             fprintf(asm_file, "\tLDR R0, R6, #0\n");
             fprintf(asm_file, "\tADD R6, R6, #1\n");
@@ -438,7 +438,7 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if
     case ENDWHILE:
         if (Deque_Size(while_stack) > 1)
         {
-            int nested_while_level;
+            int nested_while_level = 0;
             Deque_Pop_Front(while_stack, &nested_while_level);
             fprintf(asm_file, "\tLDR R0, R6, #0\n");
             fprintf(asm_file, "\tADD R6, R6, #1\n");
@@ -448,7 +448,7 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if
         }
         else
         {
-            int nested_while_level;
+            int nested_while_level = 0;
             Deque_Pop_Front(while_stack, &nested_while_level);
             fprintf(asm_file, "\tLDR R0, R6, #0\n");
             fprintf(asm_file, "\tADD R6, R6, #1\n");
