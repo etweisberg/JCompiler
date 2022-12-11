@@ -9,7 +9,7 @@ jc.o: jc.c token.h Deque.h
 token.o: token.c token.h
 	gcc -g -Wall -std=c11 -c token.c
 
-deque.o: Deque.c Deque.h
+Deque.o: Deque.c Deque.h
 	gcc -g -Wall -std=c11 -c Deque.c
 
 clean:
