@@ -3,12 +3,13 @@
  */
 
 // the maximum length of a token is 250
+#include "Deque.h"
+
 #ifndef TOKEN_H_
 #define TOKEN_H_
 
 #include <stdio.h>
 #include <stdbool.h>
-#include "Deque.h"
 
 #define MAX_TOKEN_LENGTH 250
 

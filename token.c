@@ -360,8 +360,6 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if
         fprintf(asm_file, "\tLDR R0, R0, #%d\n", to_write.arg_no);
         fprintf(asm_file, "\tSTR R0, R6, #-1\n");
         fprintf(asm_file, "\tADD R6, R6, #-1\n");
-
-    // how do you know when to jump to end_if?
     case IF:
         if (Deque_Size(if_stack) == 0)
         {
