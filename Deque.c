@@ -36,7 +36,7 @@ Deque *Deque_Allocate()
 
 void Deque_Free(Deque *dq)
 {
-  token payload;
+  int payload;
   while (Deque_Pop_Front(dq, &payload))
     ;
   free(dq);
@@ -54,7 +54,7 @@ int Deque_Size(Deque *dq)
   }
 }
 
-void Deque_Push_Front(Deque *dq, token payload)
+void Deque_Push_Front(Deque *dq, int payload)
 {
   // memory allocation
   DequeNode *dn = malloc(sizeof(DequeNode));
@@ -81,7 +81,7 @@ void Deque_Push_Front(Deque *dq, token payload)
   dq->num_elements++;
 }
 
-bool Deque_Pop_Front(Deque *dq, token *payload_ptr)
+bool Deque_Pop_Front(Deque *dq, int *payload_ptr)
 {
   if (dq->front == NULL)
   {
@@ -105,7 +105,7 @@ bool Deque_Pop_Front(Deque *dq, token *payload_ptr)
   return true;
 }
 
-bool Deque_Peek_Front(Deque *dq, token *payload_ptr)
+bool Deque_Peek_Front(Deque *dq, int *payload_ptr)
 {
   if (!dq->front)
   {
@@ -118,7 +118,7 @@ bool Deque_Peek_Front(Deque *dq, token *payload_ptr)
   }
 }
 
-void Deque_Push_Back(Deque *dq, token payload)
+void Deque_Push_Back(Deque *dq, int payload)
 {
 
   DequeNode *dn = malloc(sizeof(DequeNode));
@@ -146,7 +146,7 @@ void Deque_Push_Back(Deque *dq, token payload)
   dq->num_elements++;
 }
 
-bool Deque_Pop_Back(Deque *dq, token *payload_ptr)
+bool Deque_Pop_Back(Deque *dq, int *payload_ptr)
 {
   if (dq->back == NULL)
   {
@@ -170,7 +170,7 @@ bool Deque_Pop_Back(Deque *dq, token *payload_ptr)
   return true;
 }
 
-bool Deque_Peek_Back(Deque *dq, token *payload_ptr)
+bool Deque_Peek_Back(Deque *dq, int *payload_ptr)
 {
   if (!dq->back)
   {

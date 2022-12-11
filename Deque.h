@@ -12,7 +12,6 @@
 #define HW7_DEQUE_H_
 
 #include <stdbool.h>
-#include "token.h"
 
 // for bool type (true, false)
 
@@ -33,7 +32,7 @@
 // payload.
 typedef struct dq_node_st
 {
-  token payload;           // customer-supplied payload
+  int payload;             // customer-supplied payload
   struct dq_node_st *next; // next node in deque, or NULL
   struct dq_node_st *prev; // prev node in deque, or NULL
 } DequeNode;
@@ -82,7 +81,7 @@ int Deque_Size(Deque *dq);
 // Arguments:
 // - dq: the Deque to push onto.
 // - payload: the payload to push to the front
-void Deque_Push_Front(Deque *dq, token payload);
+void Deque_Push_Front(Deque *dq, int payload);
 
 // Pop an element from the front of the deque.
 //
@@ -94,7 +93,7 @@ void Deque_Push_Front(Deque *dq, token payload);
 // Returns:
 // - false on failure (eg, the deque is empty).
 // - true on success.
-bool Deque_Pop_Front(Deque *dq, token *payload_ptr);
+bool Deque_Pop_Front(Deque *dq, int *payload_ptr);
 
 // Peeks at the element at the front of the deque.
 //
@@ -106,7 +105,7 @@ bool Deque_Pop_Front(Deque *dq, token *payload_ptr);
 // Returns:
 // - false on failure (eg, the deque is empty).
 // - true on success.
-bool Deque_Peek_Front(Deque *dq, token *payload_ptr);
+bool Deque_Peek_Front(Deque *dq, int *payload_ptr);
 
 // Pushes a new element to the end of the deque.
 //
@@ -115,7 +114,7 @@ bool Deque_Peek_Front(Deque *dq, token *payload_ptr);
 // Arguments:
 // - dq: the Deque to push onto.
 // - payload: the payload to push to the end
-void Deque_Push_Back(Deque *dq, token payload);
+void Deque_Push_Back(Deque *dq, int payload);
 
 // Pops an element from the end of the deque.
 //
@@ -129,7 +128,7 @@ void Deque_Push_Back(Deque *dq, token payload);
 // Returns:
 // - false: on failure (eg, the deque is empty).
 // - true: on success.
-bool Deque_Pop_Back(Deque *dq, token *payload_ptr);
+bool Deque_Pop_Back(Deque *dq, int *payload_ptr);
 
 // Peeks at the element at the back of the deque.
 //
@@ -141,5 +140,5 @@ bool Deque_Pop_Back(Deque *dq, token *payload_ptr);
 // Returns:
 // - false on failure (eg, the deque is empty).
 // - true on success.
-bool Deque_Peek_Back(Deque *dq, token *payload_ptr);
+bool Deque_Peek_Back(Deque *dq, int *payload_ptr);
 #endif
