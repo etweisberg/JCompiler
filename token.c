@@ -251,7 +251,19 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func)
     switch (to_write.type)
     {
     case LITERAL:
-        fprintf(asm_file, "\tCONST R7, #%d\n\tADD R6, R6, #-1\n\tSTR R7, R6, #0\n", to_write.literal_value);
+        if (to_write.literal_value < 255)
+        {
+            fprintf(asm_file, "\tCONST R7, #%d\n\tADD R6, R6, #-1\n\tSTR R7, R6, #0\n", to_write.literal_value);
+        }
+        else
+        {
+            int const_val = to_write.literal_value & 0xFF;
+            __uint8_t hiconst_val = to_write.literal_value >> 8;
+            fprintf(asm_file, "\tCONST R7, #%d\n", const_val);
+            fprintf(asm_file, "\tHICONST R7, #%d\n", hiconst_val);
+            fprintf(asm_file, "\tADD R6, R6, #-1\n");
+            fprintf(asm_file, "\tSTR R7, R6, #0\n");
+        }
         break;
 
     // if u read in defun check next token for ident
