@@ -11,8 +11,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef HW7_DEQUE_H_
 #include "Deque.h"
-
+#endif
 ///////////////////////////////////////////////////////////////////////////////
 // Deque implementation.
 
