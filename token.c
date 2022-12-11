@@ -259,6 +259,7 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func)
         {
             int const_val = to_write.literal_value & 0xFF;
             __uint8_t hiconst_val = to_write.literal_value >> 8;
+            printf("%d\n", (const_val & 0xFF) | (hiconst_val << 8));
             fprintf(asm_file, "\tCONST R7, #%d\n", const_val);
             fprintf(asm_file, "\tHICONST R7, #%d\n", hiconst_val);
             fprintf(asm_file, "\tADD R6, R6, #-1\n");
