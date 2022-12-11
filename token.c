@@ -246,7 +246,7 @@ void print_token(FILE *f, token to_print)
     }
 }
 
-void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func)
+void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if_stack, Deque *else_stack, Deque *while_stack)
 {
     switch (to_write.type)
     {
@@ -365,6 +365,97 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func)
         fprintf(asm_file, "\tLDR R0, R0, #%d\n", to_write.arg_no);
         fprintf(asm_file, "\tSTR R0, R6, #-1\n");
         fprintf(asm_file, "\tADD R6, R6, #-1\n");
+
+    // how do you know when to jump to end_if?
+    case IF:
+        if (Deque_Size(if_stack) == 0)
+        {
+            Deque_Push_Front(if_stack, 1);
+            fprintf(asm_file, "\tLDR R0, R6, #0\n");
+            fprintf(asm_file, "\tADD R6, R6, #1\n");
+            fprintf(asm_file, "\tBRZ R0, ELSE_%d\n", 1);
+        }
+        else
+        {
+            int nested_level;
+            fprintf(asm_file, "\tLDR R0, R6, #0\n");
+            fprintf(asm_file, "\tADD R6, R6, #1\n");
+            Deque_Peek_Front(if_stack, &nested_level);
+            fprintf(asm_file, "\tBRZ R0, ELSE_%d\n", nested_level);
+            Deque_Push_Front(if_stack, nested_level + 1);
+        }
+    case ELSE:
+        if (Deque_Size(else_stack) == 0)
+        {
+            Deque_Push_Front(else_stack, 1);
+            fprintf(asm_file, "\tJMP ENDIF_%d\n", 1);
+            fprintf(asm_file, "ELSE_%d:\n", 1);
+        }
+        else
+        {
+            int nested_level;
+            Deque_Peek_Front(else_stack, &nested_level);
+            fprintf(asm_file, "\tJMP ENDIF_%d\n", nested_level);
+            fprintf(asm_file, "ELSE_%d:\n", nested_level);
+            Deque_Push_Front(else_stack, nested_level + 1);
+        }
+        break;
+    case ENDIF:
+        int nested_if_level;
+        int nested_else_level;
+        if (Deque_Size(if_stack) > 1)
+        {
+            fprintf(asm_file, "ENDIF_%d:\n", nested_if_level);
+            fprintf(asm_file, "\tJMP ENDIF_%d\n", nested_if_level - 1);
+            Deque_Pop_Front(if_stack, &nested_if_level);
+            Deque_Pop_Front(else_stack, &nested_else_level);
+        }
+        else
+        {
+            fprintf(asm_file, "ENDIF_%d:\n", nested_if_level);
+            Deque_Pop_Front(if_stack, &nested_if_level);
+            Deque_Pop_Front(else_stack, &nested_else_level);
+        }
+        break;
+    case WHILE:
+        if (Deque_Size(while_stack) == 0)
+        {
+            Deque_Push_Front(while_stack, 1);
+            fprintf(asm_file, "WHILE_%d:\n", 1);
+            fprintf(asm_file, "\tLDR R0, R6, #0\n");
+            fprintf(asm_file, "\tADD R6, R6, #1\n");
+            fprintf(asm_file, "\tBRZ R0, ENDWHILE_%d\n", 1);
+        }
+        else
+        {
+            int nested_level;
+            Deque_Peek_Front(while_stack, &nested_level);
+            fprintf(asm_file, "\tLDR R0, R6, #0\n");
+            fprintf(asm_file, "\tADD R6, R6, #1\n");
+            fprintf(asm_file, "\tBRZ R0, ENDWHILE_%d\n", nested_level);
+            fprintf(asm_file, "WHILE_%d:\n", nested_level);
+            Deque_Push_Front(while_stack, nested_level + 1);
+        }
+    case ENDWHILE:
+        int nested_while_level;
+        if (Deque_Size(while_stack) > 1)
+        {
+            Deque_Pop_Front(while_stack, &nested_while_level);
+            fprintf(asm_file, "\tLDR R0, R6, #0\n");
+            fprintf(asm_file, "\tADD R6, R6, #1\n");
+            fprintf(asm_file, "\tBRnp R0, WHILE_%d\n", nested_while_level);
+            fprintf(asm_file, "ENDWHILE_%d:\n", nested_while_level);
+            fprintf(asm_file, "\tJMP WHILE_%d\n", nested_while_level - 1);
+        }
+        else
+        {
+            Deque_Pop_Front(while_stack, &nested_while_level);
+            fprintf(asm_file, "\tLDR R0, R6, #0\n");
+            fprintf(asm_file, "\tADD R6, R6, #1\n");
+            fprintf(asm_file, "\tBRnp R0, WHILE_%d\n", nested_while_level);
+            fprintf(asm_file, "ENDWHILE_%d:\n", nested_while_level);
+        }
+        break;
     default:
         break;
     }

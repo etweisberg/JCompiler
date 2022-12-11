@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     // iterating through tokens
     while (next_token(input, &output_t))
     {
-        stack_to_asm(asm_output, output_t, &defining_func);
+        stack_to_asm(asm_output, output_t, &defining_func, if_stack, else_stack, while_stack);
         print_token(test, output_t);
     }
 
