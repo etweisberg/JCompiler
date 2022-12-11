@@ -3,12 +3,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#ifndef TOKEN_H_
 #include "token.h"
-#endif
-#ifndef HW7_DEQUE_H_
 #include "Deque.h"
-#endif
 bool next_token(FILE *j_file, token *output)
 {
     char j_token[MAX_TOKEN_LENGTH + 1];
