@@ -34,7 +34,6 @@ int main(int argc, char **argv)
                     had_else = true;
                     fprintf(asm_output, "\tJMP ENDIF_%d\n", if_count - 1);
                     fprintf(asm_output, "ELSE_%d\n", if_count - 1);
-                    break;
                 }
                 else if (output_t.type == ENDIF)
                 {
@@ -82,8 +81,7 @@ int main(int argc, char **argv)
                 stack_to_asm(asm_output, output_t, &defining_func, &branch_count, &if_count, &while_count);
             }
         }
-        print_token(output_t);
-        printf("IF_COUNT: %d, WHILE_COUNT: %d\n", if_count, while_count);
+        // print_token(output_t);
     }
 
     // freeing memory
