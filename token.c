@@ -4,7 +4,6 @@
 #include <ctype.h>
 #include <string.h>
 #include "token.h"
-#include "Deque.h"
 
 bool next_token(FILE *j_file, token *output)
 {
@@ -152,97 +151,97 @@ bool next_token(FILE *j_file, token *output)
     }
 }
 
-void print_token(FILE *f, token to_print)
+void print_token(token to_print)
 {
     switch (to_print.type)
     {
     case PLUS:
-        fprintf(f, " + ");
+        printf(" + \n");
         break;
     case MINUS:
-        fprintf(f, " - ");
+        printf(" - \n");
         break;
     case MUL:
-        fprintf(f, " * ");
+        printf(" * \n");
         break;
     case DIV:
-        fprintf(f, " / ");
+        printf(" / \n");
         break;
     case MOD:
-        fprintf(f, " %% ");
+        printf(" %% \n");
         break;
     case AND:
-        fprintf(f, " and ");
+        printf(" and \n");
         break;
     case OR:
-        fprintf(f, " or ");
+        printf(" or \n");
         break;
     case NOT:
-        fprintf(f, " not ");
+        printf(" not \n");
         break;
     case LT:
-        fprintf(f, " lt ");
+        printf(" lt \n");
         break;
     case LE:
-        fprintf(f, " le ");
+        printf(" le \n");
         break;
     case EQ:
-        fprintf(f, " eq ");
+        printf(" eq \n");
         break;
     case GE:
-        fprintf(f, " ge ");
+        printf(" ge \n");
         break;
     case GT:
-        fprintf(f, " gt ");
+        printf(" gt \n");
         break;
     case IF:
-        fprintf(f, " if ");
+        printf(" if \n");
         break;
     case ELSE:
-        fprintf(f, " else ");
+        printf(" else \n");
         break;
     case ENDIF:
-        fprintf(f, " endif ");
+        printf(" endif \n");
         break;
     case WHILE:
-        fprintf(f, " while ");
+        printf(" while \n");
         break;
     case ENDWHILE:
-        fprintf(f, " endwhile ");
+        printf(" endwhile \n");
         break;
     case DROP:
-        fprintf(f, " drop ");
+        printf(" drop \n");
         break;
     case DUP:
-        fprintf(f, " dup ");
+        printf(" dup \n");
         break;
     case SWAP:
-        fprintf(f, " swap ");
+        printf(" swap \n");
         break;
     case ROT:
-        fprintf(f, " rot ");
+        printf(" rot \n");
         break;
     case RETURN:
-        fprintf(f, " return ");
+        printf(" return \n");
         break;
     case DEFUN:
-        fprintf(f, " defun ");
+        printf(" defun \n");
         break;
     case IDENT:
-        fprintf(f, " %s ", to_print.str);
+        printf(" %s \n", to_print.str);
         break;
     case ARG:
-        fprintf(f, " arg%d ", to_print.arg_no);
+        printf(" arg%d \n", to_print.arg_no);
         break;
     case LITERAL:
-        fprintf(f, " %d ", to_print.literal_value);
+        printf(" %d \n", to_print.literal_value);
         break;
     default:
-        fprintf(f, " X ");
+        break;
     }
 }
 
-void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, int *branch_count, Deque *if_stack, Deque *else_stack, Deque *while_stack)
+void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, bool *had_else, int *branch_count, int *if_count, int *else_count, int *while_count)
 {
     switch (to_write.type)
     {
@@ -361,96 +360,76 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, int *bran
         fprintf(asm_file, "\tLDR R0, R0, #%d\n", to_write.arg_no);
         fprintf(asm_file, "\tSTR R0, R6, #-1\n");
         fprintf(asm_file, "\tADD R6, R6, #-1\n");
+        break;
     case IF:
-        if (Deque_Size(if_stack) == 0)
-        {
-            Deque_Push_Front(if_stack, 1);
-            fprintf(asm_file, "\tLDR R0, R6, #0\n");
-            fprintf(asm_file, "\tADD R6, R6, #1\n");
-            fprintf(asm_file, "\tBRZ R0, ELSE_%d\n", 1);
-        }
-        else
-        {
-            int nested_level = 0;
-            fprintf(asm_file, "\tLDR R0, R6, #0\n");
-            fprintf(asm_file, "\tADD R6, R6, #1\n");
-            Deque_Peek_Front(if_stack, &nested_level);
-            fprintf(asm_file, "\tBRZ R0, ELSE_%d\n", nested_level);
-            Deque_Push_Front(if_stack, nested_level + 1);
-        }
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tBRz R0, ELSE_%d\n", *if_count);
+        break;
     case ELSE:
-        if (Deque_Size(else_stack) == 0)
-        {
-            Deque_Push_Front(else_stack, 1);
-            fprintf(asm_file, "\tJMP ENDIF_%d\n", 1);
-            fprintf(asm_file, "ELSE_%d:\n", 1);
-        }
-        else
-        {
-            int nested_level = 0;
-            Deque_Peek_Front(else_stack, &nested_level);
-            fprintf(asm_file, "\tJMP ENDIF_%d\n", nested_level);
-            fprintf(asm_file, "ELSE_%d:\n", nested_level);
-            Deque_Push_Front(else_stack, nested_level + 1);
-        }
+        fprintf(asm_file, "\tJMP ENDIF_%d\n", *else_count);
+        fprintf(asm_file, "ELSE_%d\n", *else_count);
         break;
     case ENDIF:
-        if (Deque_Size(if_stack) > 1)
+        if (!*had_else)
         {
-            int nested_if_level = 0;
-            int nested_else_level = 0;
-            fprintf(asm_file, "ENDIF_%d:\n", nested_if_level);
-            fprintf(asm_file, "\tJMP ENDIF_%d\n", nested_if_level - 1);
-            Deque_Pop_Front(if_stack, &nested_if_level);
-            Deque_Pop_Front(else_stack, &nested_else_level);
+            if (*if_count > 0)
+            {
+                fprintf(asm_file, "ELSE_%d\n", *if_count);
+                fprintf(asm_file, "ENDIF_%d\n", *if_count);
+                fprintf(asm_file, "\tJMP ENDIF_%d\n", *if_count - 1);
+            }
+            else
+            {
+                fprintf(asm_file, "ELSE_%d\n", *if_count);
+                fprintf(asm_file, "ENDIF_%d\n", *if_count);
+            }
         }
         else
         {
-            int nested_if_level = 0;
-            int nested_else_level = 0;
-            fprintf(asm_file, "ENDIF_%d:\n", nested_if_level);
-            Deque_Pop_Front(if_stack, &nested_if_level);
-            Deque_Pop_Front(else_stack, &nested_else_level);
+            if (*if_count > 0)
+            {
+
+                fprintf(asm_file, "ENDIF_%d\n", *if_count);
+                fprintf(asm_file, "\tJMP ENDIF_%d\n", *if_count - 1);
+            }
+            else
+            {
+                fprintf(asm_file, "ENDIF_%d\n", *if_count);
+            }
         }
         break;
     case WHILE:
-        if (Deque_Size(while_stack) == 0)
+        if (*while_count == 0)
         {
-            Deque_Push_Front(while_stack, 1);
-            fprintf(asm_file, "WHILE_%d:\n", 1);
+            fprintf(asm_file, "WHILE_%d\n", 1);
             fprintf(asm_file, "\tLDR R0, R6, #0\n");
             fprintf(asm_file, "\tADD R6, R6, #1\n");
             fprintf(asm_file, "\tBRZ R0, ENDWHILE_%d\n", 1);
         }
         else
         {
-            int nested_level = 0;
-            Deque_Peek_Front(while_stack, &nested_level);
             fprintf(asm_file, "\tLDR R0, R6, #0\n");
             fprintf(asm_file, "\tADD R6, R6, #1\n");
-            fprintf(asm_file, "\tBRZ R0, ENDWHILE_%d\n", nested_level);
-            fprintf(asm_file, "WHILE_%d:\n", nested_level);
-            Deque_Push_Front(while_stack, nested_level + 1);
+            fprintf(asm_file, "\tBRz R0, ENDWHILE_%d\n", *while_count);
+            fprintf(asm_file, "WHILE_%d\n", *while_count);
         }
+        break;
     case ENDWHILE:
-        if (Deque_Size(while_stack) > 1)
+        if (*while_count > 0)
         {
-            int nested_while_level = 0;
-            Deque_Pop_Front(while_stack, &nested_while_level);
             fprintf(asm_file, "\tLDR R0, R6, #0\n");
             fprintf(asm_file, "\tADD R6, R6, #1\n");
-            fprintf(asm_file, "\tBRnp R0, WHILE_%d\n", nested_while_level);
-            fprintf(asm_file, "ENDWHILE_%d:\n", nested_while_level);
-            fprintf(asm_file, "\tJMP WHILE_%d\n", nested_while_level - 1);
+            fprintf(asm_file, "\tBRnp R0, WHILE_%d\n", *while_count);
+            fprintf(asm_file, "ENDWHILE_%d\n", *while_count);
+            fprintf(asm_file, "\tJMP WHILE_%d\n", *while_count - 1);
         }
         else
         {
-            int nested_while_level = 0;
-            Deque_Pop_Front(while_stack, &nested_while_level);
             fprintf(asm_file, "\tLDR R0, R6, #0\n");
             fprintf(asm_file, "\tADD R6, R6, #1\n");
-            fprintf(asm_file, "\tBRnp R0, WHILE_%d\n", nested_while_level);
-            fprintf(asm_file, "ENDWHILE_%d:\n", nested_while_level);
+            fprintf(asm_file, "\tBRnp R0, WHILE_%d\n", *while_count);
+            fprintf(asm_file, "ENDWHILE_%d\n", *while_count);
         }
         break;
     case LT:
@@ -461,9 +440,9 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, int *bran
         fprintf(asm_file, "\tBRzp, FALSE_%d\n", *branch_count);
         fprintf(asm_file, "\tCONST R0, #1\n");
         fprintf(asm_file, "\tJMP, END_%d\n", *branch_count);
-        fprintf(asm_file, "\tFALSE_%d:\n", *branch_count);
+        fprintf(asm_file, "FALSE_%d\n", *branch_count);
         fprintf(asm_file, "\tCONST R0, #0\n");
-        fprintf(asm_file, "\tEND_%d:\n", *branch_count);
+        fprintf(asm_file, "END_%d\n", *branch_count);
         fprintf(asm_file, "\tSTR R0, R6, #0\n");
         *branch_count += 1;
         break;
@@ -475,9 +454,9 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, int *bran
         fprintf(asm_file, "\tBRp, FALSE_%d\n", *branch_count);
         fprintf(asm_file, "\tCONST R0, #1\n");
         fprintf(asm_file, "\tJMP, END_%d\n", *branch_count);
-        fprintf(asm_file, "\tFALSE_%d:\n", *branch_count);
+        fprintf(asm_file, "FALSE_%d\n", *branch_count);
         fprintf(asm_file, "\tCONST R0, #0\n");
-        fprintf(asm_file, "\tEND_%d:\n", *branch_count);
+        fprintf(asm_file, "END_%d\n", *branch_count);
         fprintf(asm_file, "\tSTR R0, R6, #0\n");
         *branch_count += 1;
         break;
@@ -489,9 +468,9 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, int *bran
         fprintf(asm_file, "\tBRnp, FALSE_%d\n", *branch_count);
         fprintf(asm_file, "\tCONST R0, #1\n");
         fprintf(asm_file, "\tJMP, END_%d\n", *branch_count);
-        fprintf(asm_file, "\tFALSE_%d:\n", *branch_count);
+        fprintf(asm_file, "FALSE_%d\n", *branch_count);
         fprintf(asm_file, "\tCONST R0, #0\n");
-        fprintf(asm_file, "\tEND_%d:\n", *branch_count);
+        fprintf(asm_file, "END_%d\n", *branch_count);
         fprintf(asm_file, "\tSTR R0, R6, #0\n");
         *branch_count += 1;
         break;
@@ -503,9 +482,9 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, int *bran
         fprintf(asm_file, "\tBRn, FALSE_%d\n", *branch_count);
         fprintf(asm_file, "\tCONST R0, #1\n");
         fprintf(asm_file, "\tJMP, END_%d\n", *branch_count);
-        fprintf(asm_file, "\tFALSE_%d:\n", *branch_count);
+        fprintf(asm_file, "FALSE_%d\n", *branch_count);
         fprintf(asm_file, "\tCONST R0, #0\n");
-        fprintf(asm_file, "\tEND_%d:\n", *branch_count);
+        fprintf(asm_file, "END_%d\n", *branch_count);
         fprintf(asm_file, "\tSTR R0, R6, #0\n");
         *branch_count += 1;
         break;
@@ -517,9 +496,9 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, int *bran
         fprintf(asm_file, "\tBRnz, FALSE_%d\n", *branch_count);
         fprintf(asm_file, "\tCONST R0, #1\n");
         fprintf(asm_file, "\tJMP, END_%d\n", *branch_count);
-        fprintf(asm_file, "\tFALSE_%d:\n", *branch_count);
+        fprintf(asm_file, "FALSE_%d\n", *branch_count);
         fprintf(asm_file, "\tCONST R0, #0\n");
-        fprintf(asm_file, "\tEND_%d:\n", *branch_count);
+        fprintf(asm_file, "END_%d\n", *branch_count);
         fprintf(asm_file, "\tSTR R0, R6, #0\n");
         *branch_count += 1;
         break;

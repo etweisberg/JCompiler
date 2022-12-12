@@ -86,9 +86,9 @@ bool next_token(FILE *j_file, token *output);
 //      The token is printed to this file in whatever format you like.
 //      To print to the terminal, pass in 'std_out'.
 // - to_print: the token to be printed to the file
-void print_token(FILE *f, token to_print);
+void print_token(token to_print);
 
 // writing stack of instructions to ASM
-void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, int *branch_count, Deque *if_stack, Deque *else_stack, Deque *while_stack);
+void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, bool *had_else, int *branch_count, int *if_count, int *else_count, int *while_count);
 
 #endif
