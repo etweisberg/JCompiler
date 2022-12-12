@@ -405,7 +405,7 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, bool *had
             fprintf(asm_file, "WHILE_%d\n", 1);
             fprintf(asm_file, "\tLDR R0, R6, #0\n");
             fprintf(asm_file, "\tADD R6, R6, #1\n");
-            fprintf(asm_file, "\tBRZ R0, ENDWHILE_%d\n", 1);
+            fprintf(asm_file, "\tBRz R0, ENDWHILE_%d\n", 1);
         }
         else
         {
