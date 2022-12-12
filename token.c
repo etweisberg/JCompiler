@@ -246,7 +246,7 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, bool *had
     switch (to_write.type)
     {
     case LITERAL:
-        if (to_write.literal_value < 255)
+        if (to_write.literal_value < 128 && to_write.literal_value > -128)
         {
             fprintf(asm_file, "\tCONST R7, #%d\n\tADD R6, R6, #-1\n\tSTR R7, R6, #0\n", to_write.literal_value);
         }
