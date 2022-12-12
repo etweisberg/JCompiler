@@ -89,6 +89,6 @@ bool next_token(FILE *j_file, token *output);
 void print_token(FILE *f, token to_print);
 
 // writing stack of instructions to ASM
-void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if_stack, Deque *else_stack, Deque *while_stack);
+void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, int *branch_count, Deque *if_stack, Deque *else_stack, Deque *while_stack);
 
 #endif

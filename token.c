@@ -5,6 +5,7 @@
 #include <string.h>
 #include "token.h"
 #include "Deque.h"
+
 bool next_token(FILE *j_file, token *output)
 {
     char j_token[MAX_TOKEN_LENGTH + 1];
@@ -241,7 +242,7 @@ void print_token(FILE *f, token to_print)
     }
 }
 
-void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if_stack, Deque *else_stack, Deque *while_stack)
+void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, int *branch_count, Deque *if_stack, Deque *else_stack, Deque *while_stack)
 {
     switch (to_write.type)
     {
@@ -451,6 +452,98 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, Deque *if
             fprintf(asm_file, "\tBRnp R0, WHILE_%d\n", nested_while_level);
             fprintf(asm_file, "ENDWHILE_%d:\n", nested_while_level);
         }
+        break;
+    case LT:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tLDR R1, R6, #1\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tCMP R0, R1\n");
+        fprintf(asm_file, "\tBRzp, FALSE_%d\n", *branch_count);
+        fprintf(asm_file, "\tCONST R0, #1\n");
+        fprintf(asm_file, "\tJMP, END_%d\n", *branch_count);
+        fprintf(asm_file, "\tFALSE_%d:\n", *branch_count);
+        fprintf(asm_file, "\tCONST R0, #0\n");
+        fprintf(asm_file, "\tEND_%d:\n", *branch_count);
+        fprintf(asm_file, "\tSTR R0, R6, #0\n");
+        *branch_count += 1;
+        break;
+    case LE:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tLDR R1, R6, #1\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tCMP R0, R1\n");
+        fprintf(asm_file, "\tBRp, FALSE_%d\n", *branch_count);
+        fprintf(asm_file, "\tCONST R0, #1\n");
+        fprintf(asm_file, "\tJMP, END_%d\n", *branch_count);
+        fprintf(asm_file, "\tFALSE_%d:\n", *branch_count);
+        fprintf(asm_file, "\tCONST R0, #0\n");
+        fprintf(asm_file, "\tEND_%d:\n", *branch_count);
+        fprintf(asm_file, "\tSTR R0, R6, #0\n");
+        *branch_count += 1;
+        break;
+    case EQ:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tLDR R1, R6, #1\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tCMP R0, R1\n");
+        fprintf(asm_file, "\tBRnp, FALSE_%d\n", *branch_count);
+        fprintf(asm_file, "\tCONST R0, #1\n");
+        fprintf(asm_file, "\tJMP, END_%d\n", *branch_count);
+        fprintf(asm_file, "\tFALSE_%d:\n", *branch_count);
+        fprintf(asm_file, "\tCONST R0, #0\n");
+        fprintf(asm_file, "\tEND_%d:\n", *branch_count);
+        fprintf(asm_file, "\tSTR R0, R6, #0\n");
+        *branch_count += 1;
+        break;
+    case GE:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tLDR R1, R6, #1\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tCMP R0, R1\n");
+        fprintf(asm_file, "\tBRn, FALSE_%d\n", *branch_count);
+        fprintf(asm_file, "\tCONST R0, #1\n");
+        fprintf(asm_file, "\tJMP, END_%d\n", *branch_count);
+        fprintf(asm_file, "\tFALSE_%d:\n", *branch_count);
+        fprintf(asm_file, "\tCONST R0, #0\n");
+        fprintf(asm_file, "\tEND_%d:\n", *branch_count);
+        fprintf(asm_file, "\tSTR R0, R6, #0\n");
+        *branch_count += 1;
+        break;
+    case GT:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tLDR R1, R6, #1\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tCMP R0, R1\n");
+        fprintf(asm_file, "\tBRnz, FALSE_%d\n", *branch_count);
+        fprintf(asm_file, "\tCONST R0, #1\n");
+        fprintf(asm_file, "\tJMP, END_%d\n", *branch_count);
+        fprintf(asm_file, "\tFALSE_%d:\n", *branch_count);
+        fprintf(asm_file, "\tCONST R0, #0\n");
+        fprintf(asm_file, "\tEND_%d:\n", *branch_count);
+        fprintf(asm_file, "\tSTR R0, R6, #0\n");
+        *branch_count += 1;
+        break;
+    case DROP:
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        break;
+    case DUP:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tADD R6, R6, #-1\n");
+        fprintf(asm_file, "\tSTR R0, R6, #0\n");
+        break;
+    case SWAP:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tLDR R1, R6, #1\n");
+        fprintf(asm_file, "\tSTR R0, R6, #1\n");
+        fprintf(asm_file, "\tSTR R1, R6, #0\n");
+        break;
+    case ROT:
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        fprintf(asm_file, "\tLDR R1, R6, #1\n");
+        fprintf(asm_file, "\tLDR R2, R6, #2\n");
+        fprintf(asm_file, "\tSTR R0, R6, #1\n");
+        fprintf(asm_file, "\tSTR R2, R6, #0\n");
+        fprintf(asm_file, "\tSTR R1, R6, #2\n");
         break;
     default:
         break;

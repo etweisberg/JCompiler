@@ -15,6 +15,7 @@ int main(int argc, char **argv)
     FILE *asm_output = fopen(strcat(name, ".asm"), "w");
     token output_t;
     bool defining_func = false;
+    int branch_count = 0;
     fprintf(asm_output, "\t.CODE\n\t.FALIGN\n");
 
     // if stack (add when encountering if, pop when encountering endif)
@@ -27,7 +28,7 @@ int main(int argc, char **argv)
     // iterating through tokens
     while (next_token(input, &output_t))
     {
-        stack_to_asm(asm_output, output_t, &defining_func, if_stack, else_stack, while_stack);
+        stack_to_asm(asm_output, output_t, &defining_func, &branch_count, if_stack, else_stack, while_stack);
         print_token(test, output_t);
     }
 
