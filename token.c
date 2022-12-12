@@ -363,8 +363,8 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, bool *had
         break;
     case IF:
         fprintf(asm_file, "\tLDR R0, R6, #0\n");
-        fprintf(asm_file, "\tADD R6, R6, #1\n");
-        fprintf(asm_file, "\tBRz R0, ELSE_%d\n", *if_count);
+        // fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tBRz ELSE_%d\n", *if_count);
         break;
     case ELSE:
         fprintf(asm_file, "\tJMP ENDIF_%d\n", *else_count);
@@ -400,35 +400,25 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, bool *had
         }
         break;
     case WHILE:
-        if (*while_count == 0)
-        {
-            fprintf(asm_file, "WHILE_%d\n", 1);
-            fprintf(asm_file, "\tLDR R0, R6, #0\n");
-            fprintf(asm_file, "\tADD R6, R6, #1\n");
-            fprintf(asm_file, "\tBRz R0, ENDWHILE_%d\n", 1);
-        }
-        else
-        {
-            fprintf(asm_file, "\tLDR R0, R6, #0\n");
-            fprintf(asm_file, "\tADD R6, R6, #1\n");
-            fprintf(asm_file, "\tBRz R0, ENDWHILE_%d\n", *while_count);
-            fprintf(asm_file, "WHILE_%d\n", *while_count);
-        }
+        fprintf(asm_file, "\tLDR R0, R6, #0\n");
+        // fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tBRz ENDWHILE_%d\n", *while_count);
+        fprintf(asm_file, "WHILE_%d\n", *while_count);
         break;
     case ENDWHILE:
         if (*while_count > 0)
         {
             fprintf(asm_file, "\tLDR R0, R6, #0\n");
-            fprintf(asm_file, "\tADD R6, R6, #1\n");
-            fprintf(asm_file, "\tBRnp R0, WHILE_%d\n", *while_count);
+            // fprintf(asm_file, "\tADD R6, R6, #1\n");
+            fprintf(asm_file, "\tBRnp WHILE_%d\n", *while_count);
             fprintf(asm_file, "ENDWHILE_%d\n", *while_count);
             fprintf(asm_file, "\tJMP WHILE_%d\n", *while_count - 1);
         }
         else
         {
             fprintf(asm_file, "\tLDR R0, R6, #0\n");
-            fprintf(asm_file, "\tADD R6, R6, #1\n");
-            fprintf(asm_file, "\tBRnp R0, WHILE_%d\n", *while_count);
+            // fprintf(asm_file, "\tADD R6, R6, #1\n");
+            fprintf(asm_file, "\tBRnp WHILE_%d\n", *while_count);
             fprintf(asm_file, "ENDWHILE_%d\n", *while_count);
         }
         break;

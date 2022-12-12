@@ -12,11 +12,13 @@ int main(int argc, char **argv)
     name[strlen(name) - 2] = '\0';
     FILE *input = fopen(argv[1], "r");
     FILE *asm_output = fopen(strcat(name, ".asm"), "w");
+    fprintf(asm_output, "\t.CODE\n\t.FALIGN\n");
+
+    // state variables
     token output_t;
     bool defining_func = false;
     bool had_else = false;
     int branch_count = 0;
-    fprintf(asm_output, "\t.CODE\n\t.FALIGN\n");
 
     // if stack (add when encountering if, pop when encountering endif)
     Deque *if_stack = Deque_Allocate();
@@ -50,9 +52,16 @@ int main(int argc, char **argv)
         }
         else if (output_t.type == ENDIF)
         {
-            had_else = false;
-            Deque_Pop_Front(if_stack, &if_count);
-            Deque_Pop_Front(else_stack, &else_count);
+            if (had_else)
+            {
+                had_else = false;
+                Deque_Pop_Front(if_stack, &if_count);
+                Deque_Pop_Front(else_stack, &else_count);
+            }
+            else
+            {
+                Deque_Pop_Front(if_stack, &if_count);
+            }
         }
         else if (output_t.type == ENDWHILE)
         {
