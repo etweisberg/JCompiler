@@ -46,7 +46,6 @@ int main(int argc, char **argv)
                     {
                         fprintf(asm_output, "ENDIF_%d\n", if_count - 1);
                     }
-                    if_count--;
                     break;
                 }
                 else
@@ -57,31 +56,33 @@ int main(int argc, char **argv)
         }
         else if (output_t.type == WHILE)
         {
-            if (output_t.type == ENDWHILE)
+            while (next_token(input, &output_t))
             {
-                if (while_count > 0)
+                if (output_t.type == ENDWHILE)
                 {
-                    fprintf(asm_output, "\tADD R6, R6, #1\n");
-                    fprintf(asm_output, "\tLDR R0, R6, #-1\n");
-                    fprintf(asm_output, "\tBRnp WHILE_%d\n", while_count);
-                    fprintf(asm_output, "ENDWHILE_%d\n", while_count);
-                    fprintf(asm_output, "\tJMP WHILE_%d\n", while_count - 1);
+                    if (while_count > 0)
+                    {
+                        fprintf(asm_output, "\tADD R6, R6, #1\n");
+                        fprintf(asm_output, "\tLDR R0, R6, #-1\n");
+                        fprintf(asm_output, "\tBRnp WHILE_%d\n", while_count - 1);
+                        fprintf(asm_output, "ENDWHILE_%d\n", while_count - 1);
+                        fprintf(asm_output, "\tJMP WHILE_%d\n", while_count - 2);
+                    }
+                    else
+                    {
+                        fprintf(asm_output, "\tADD R6, R6, #1\n");
+                        fprintf(asm_output, "\tLDR R0, R6, #-1\n");
+                        fprintf(asm_output, "\tBRnp WHILE_%d\n", while_count - 1);
+                        fprintf(asm_output, "ENDWHILE_%d\n", while_count - 1);
+                    }
+                    break;
                 }
                 else
                 {
-                    fprintf(asm_output, "\tADD R6, R6, #1\n");
-                    fprintf(asm_output, "\tLDR R0, R6, #-1\n");
-                    fprintf(asm_output, "\tBRnp WHILE_%d\n", while_count);
-                    fprintf(asm_output, "ENDWHILE_%d\n", while_count);
+                    stack_to_asm(asm_output, output_t, &defining_func, &branch_count, &if_count, &while_count);
                 }
-                break;
-            }
-            else
-            {
-                stack_to_asm(asm_output, output_t, &defining_func, &branch_count, &if_count, &while_count);
             }
         }
-        // print_token(output_t);
     }
 
     // freeing memory
