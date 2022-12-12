@@ -242,27 +242,19 @@ void print_token(token to_print)
     }
 }
 
-void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, bool *had_else, int *branch_count, int *if_count, int *else_count, int *while_count)
+void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, int *branch_count, int *if_count, int *while_count)
 {
     switch (to_write.type)
     {
-    case LITERAL:
-        if (to_write.literal_value <= 255 && to_write.literal_value >= -256)
-        {
-            fprintf(asm_file, "\tCONST R0, #%d\n\tADD R6, R6, #-1\n\tSTR R0, R6, #0\n", to_write.literal_value);
-        }
-        else
-        {
-            int const_val = to_write.literal_value & 0x00FF;
-            uint16_t hiconst_val = (to_write.literal_value & 0xFF00) >> 8;
-            printf("%d\n", (const_val & 0xFF) | (hiconst_val << 8));
-            fprintf(asm_file, "\tCONST R0, #%d\n", const_val);
-            fprintf(asm_file, "\tHICONST R0, #%d\n", hiconst_val);
-            fprintf(asm_file, "\tADD R6, R6, #-1\n");
-            fprintf(asm_file, "\tSTR R0, R6, #0\n");
-        }
+    case LITERAL:;
+        int const_val = to_write.literal_value & 0x00FF;
+        uint16_t hiconst_val = (to_write.literal_value & 0xFF00) >> 8;
+        printf("%d\n", (const_val & 0xFF) | (hiconst_val << 8));
+        fprintf(asm_file, "\tCONST R0, #%d\n", const_val);
+        fprintf(asm_file, "\tHICONST R0, #%d\n", hiconst_val);
+        fprintf(asm_file, "\tADD R6, R6, #-1\n");
+        fprintf(asm_file, "\tSTR R0, R6, #0\n");
         break;
-
     // if u read in defun check next token for ident
     case DEFUN:
         if (*defining_func == false)
@@ -368,62 +360,21 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, bool *had
         fprintf(asm_file, "\tADD R6, R6, #1\n");
         fprintf(asm_file, "\tLDR R0, R6, #-1\n");
         fprintf(asm_file, "\tBRz ELSE_%d\n", *if_count);
+        *if_count = *if_count + 1;
         break;
-    case ELSE:
-        fprintf(asm_file, "\tJMP ENDIF_%d\n", *else_count);
-        fprintf(asm_file, "ELSE_%d\n", *else_count);
-        break;
-    case ENDIF:
-        if (!*had_else)
-        {
-            if (*if_count > 0)
-            {
-                fprintf(asm_file, "ELSE_%d\n", *if_count);
-                fprintf(asm_file, "ENDIF_%d\n", *if_count);
-                fprintf(asm_file, "\tJMP ENDIF_%d\n", *if_count - 1);
-            }
-            else
-            {
-                fprintf(asm_file, "ELSE_%d\n", *if_count);
-                fprintf(asm_file, "ENDIF_%d\n", *if_count);
-            }
-        }
-        else
-        {
-            if (*if_count > 0)
-            {
-
-                fprintf(asm_file, "ENDIF_%d\n", *if_count);
-                fprintf(asm_file, "\tJMP ENDIF_%d\n", *if_count - 1);
-            }
-            else
-            {
-                fprintf(asm_file, "ENDIF_%d\n", *if_count);
-            }
-        }
-        break;
+        /*
+         * 1. the stuff u have above + if_num++;
+         * 2. while(next_token)
+         *   2.1. if the token is not ELSE or ENDIF, call stack_to_asm
+         *   2.2. otherwise, handle else and endif accordingly by copying their bodies below
+         *
+         */
     case WHILE:
         fprintf(asm_file, "\tADD R6, R6, #1\n");
         fprintf(asm_file, "\tLDR R0, R6, #-1\n");
         fprintf(asm_file, "\tBRz ENDWHILE_%d\n", *while_count);
         fprintf(asm_file, "WHILE_%d\n", *while_count);
-        break;
-    case ENDWHILE:
-        if (*while_count > 0)
-        {
-            fprintf(asm_file, "\tADD R6, R6, #1\n");
-            fprintf(asm_file, "\tLDR R0, R6, #-1\n");
-            fprintf(asm_file, "\tBRnp WHILE_%d\n", *while_count);
-            fprintf(asm_file, "ENDWHILE_%d\n", *while_count);
-            fprintf(asm_file, "\tJMP WHILE_%d\n", *while_count - 1);
-        }
-        else
-        {
-            fprintf(asm_file, "\tADD R6, R6, #1\n");
-            fprintf(asm_file, "\tLDR R0, R6, #-1\n");
-            fprintf(asm_file, "\tBRnp WHILE_%d\n", *while_count);
-            fprintf(asm_file, "ENDWHILE_%d\n", *while_count);
-        }
+        *while_count = *while_count + 1;
         break;
     case LT:
         fprintf(asm_file, "\tLDR R0, R6, #0\n");
