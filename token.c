@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdint.h>
 #include "token.h"
 
 bool next_token(FILE *j_file, token *output)
@@ -246,19 +247,19 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, bool *had
     switch (to_write.type)
     {
     case LITERAL:
-        if (to_write.literal_value < 128 && to_write.literal_value > -128)
+        if (to_write.literal_value <= 255 && to_write.literal_value >= -256)
         {
-            fprintf(asm_file, "\tCONST R7, #%d\n\tADD R6, R6, #-1\n\tSTR R7, R6, #0\n", to_write.literal_value);
+            fprintf(asm_file, "\tCONST R0, #%d\n\tADD R6, R6, #-1\n\tSTR R0, R6, #0\n", to_write.literal_value);
         }
         else
         {
-            int const_val = to_write.literal_value & 0xFF;
-            __uint8_t hiconst_val = to_write.literal_value >> 8;
+            int const_val = to_write.literal_value & 0x00FF;
+            uint16_t hiconst_val = (to_write.literal_value & 0xFF00) >> 8;
             printf("%d\n", (const_val & 0xFF) | (hiconst_val << 8));
-            fprintf(asm_file, "\tCONST R7, #%d\n", const_val);
-            fprintf(asm_file, "\tHICONST R7, #%d\n", hiconst_val);
+            fprintf(asm_file, "\tCONST R0, #%d\n", const_val);
+            fprintf(asm_file, "\tHICONST R0, #%d\n", hiconst_val);
             fprintf(asm_file, "\tADD R6, R6, #-1\n");
-            fprintf(asm_file, "\tSTR R7, R6, #0\n");
+            fprintf(asm_file, "\tSTR R0, R6, #0\n");
         }
         break;
 
@@ -279,6 +280,7 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, bool *had
             *defining_func = false;
             // make new label and stack frame
             // function prologue
+            fprintf(asm_file, ".CODE\n.FALIGN\n");
             fprintf(asm_file, "%s\n", to_write.str);
             fprintf(asm_file, "\tSTR R7, R6, #-2\n"); // save return address
             fprintf(asm_file, "\tSTR R5, R6, #-3\n"); // save base pointer
@@ -289,12 +291,13 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, bool *had
         {
             // jump to old label
             fprintf(asm_file, "\tJSR %s\n", to_write.str);
+            fprintf(asm_file, "\tADD R6, R6, #-1\n");
         }
         break;
     case RETURN:
         // function epilogue
-        fprintf(asm_file, "\tLDR R7, R5, #-2\n"); // saving return value
-        fprintf(asm_file, "\tADD R6, R5, #0\n");  // popping locals
+        fprintf(asm_file, "\tLDR R7, R6, #0\n"); // saving return value
+        fprintf(asm_file, "\tADD R6, R5, #0\n"); // popping locals
         fprintf(asm_file, "\tADD R6, R6, #3\n");
         fprintf(asm_file, "\tSTR R7, R6, #-1\n"); // store return value
         fprintf(asm_file, "\tLDR R5, R6, #-3\n"); // restore frame pointer
@@ -362,8 +365,8 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, bool *had
         fprintf(asm_file, "\tADD R6, R6, #-1\n");
         break;
     case IF:
-        fprintf(asm_file, "\tLDR R0, R6, #0\n");
-        // fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tLDR R0, R6, #-1\n");
         fprintf(asm_file, "\tBRz ELSE_%d\n", *if_count);
         break;
     case ELSE:
@@ -400,24 +403,24 @@ void stack_to_asm(FILE *asm_file, token to_write, bool *defining_func, bool *had
         }
         break;
     case WHILE:
-        fprintf(asm_file, "\tLDR R0, R6, #0\n");
-        // fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tADD R6, R6, #1\n");
+        fprintf(asm_file, "\tLDR R0, R6, #-1\n");
         fprintf(asm_file, "\tBRz ENDWHILE_%d\n", *while_count);
         fprintf(asm_file, "WHILE_%d\n", *while_count);
         break;
     case ENDWHILE:
         if (*while_count > 0)
         {
-            fprintf(asm_file, "\tLDR R0, R6, #0\n");
-            // fprintf(asm_file, "\tADD R6, R6, #1\n");
+            fprintf(asm_file, "\tADD R6, R6, #1\n");
+            fprintf(asm_file, "\tLDR R0, R6, #-1\n");
             fprintf(asm_file, "\tBRnp WHILE_%d\n", *while_count);
             fprintf(asm_file, "ENDWHILE_%d\n", *while_count);
             fprintf(asm_file, "\tJMP WHILE_%d\n", *while_count - 1);
         }
         else
         {
-            fprintf(asm_file, "\tLDR R0, R6, #0\n");
-            // fprintf(asm_file, "\tADD R6, R6, #1\n");
+            fprintf(asm_file, "\tADD R6, R6, #1\n");
+            fprintf(asm_file, "\tLDR R0, R6, #-1\n");
             fprintf(asm_file, "\tBRnp WHILE_%d\n", *while_count);
             fprintf(asm_file, "ENDWHILE_%d\n", *while_count);
         }

@@ -12,7 +12,6 @@ int main(int argc, char **argv)
     name[strlen(name) - 2] = '\0';
     FILE *input = fopen(argv[1], "r");
     FILE *asm_output = fopen(strcat(name, ".asm"), "w");
-    fprintf(asm_output, "\t.CODE\n\t.FALIGN\n");
 
     // state variables
     token output_t;
