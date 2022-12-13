@@ -419,6 +419,7 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
             {
                 fprintf(asm_file, "\tJMP WHILE_%d\n", curr_nums);
                 fprintf(asm_file, "ENDWHILE_%d\n", curr_nums);
+                break;
             }
             else
             {
