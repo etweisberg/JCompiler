@@ -8,7 +8,6 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#include "Deque.h"
 
 #define MAX_TOKEN_LENGTH 250
 
