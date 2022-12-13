@@ -27,16 +27,15 @@ bool next_token(FILE *j_file, token *output)
             fscanf(j_file, "%s", j_token);
         }
         // literals
+        // literals
         if (strstr(j_token, "0x") != NULL)
         {
             output->type = LITERAL;
             sscanf(j_token, "%x", &(output->literal_value));
-            printf("%d\n", output->literal_value);
         }
         else if (sscanf(j_token, "%d", &(output->literal_value)) == 1)
         {
             output->type = LITERAL;
-            printf("%d\n", output->literal_value);
         }
         // operations
         else
@@ -140,6 +139,7 @@ bool next_token(FILE *j_file, token *output)
             else if (strstr(j_token, "arg") != NULL)
             {
                 output->type = ARG;
+                // moving over to number portion of arg keyword
                 memmove(&j_token[0], &j_token[0 + 1], strlen(j_token) - 0);
                 memmove(&j_token[0], &j_token[0 + 1], strlen(j_token) - 0);
                 memmove(&j_token[0], &j_token[0 + 1], strlen(j_token) - 0);
@@ -160,6 +160,7 @@ bool next_token(FILE *j_file, token *output)
     }
 }
 
+// helper function for debugging NOT USED IN ASM OUTPUT
 // helper function for debugging NOT USED IN ASM OUTPUT
 void print_token(token to_print)
 {
@@ -251,7 +252,6 @@ void print_token(token to_print)
     }
 }
 
-// asm output
 void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defining_func, int *branch_count, int *if_count, int *while_count)
 {
     if (to_write.type == LITERAL)
@@ -268,11 +268,11 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
     {
         if (*defining_func == false)
         {
-            *defining_func = true;
+            *defining_func = true; // we are now defining a function
         }
         else
         {
-            perror("DEFUN BAD ORDER");
+            perror("DEFUN BAD ORDER"); // two defuns in a row
         }
     }
     else if (to_write.type == IDENT)
@@ -293,7 +293,7 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
         {
             // jump to old label
             fprintf(asm_file, "\tJSR %s\n", to_write.str);
-            fprintf(asm_file, "\tADD R6, R6, #-1\n");
+            fprintf(asm_file, "\tADD R6, R6, #-1\n"); // creating stack space for return value
         }
     }
     else if (to_write.type == RETURN)
@@ -307,6 +307,7 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
         fprintf(asm_file, "\tLDR R7, R6, #-2\n"); // restore return address
         fprintf(asm_file, "\tRET\n");
     }
+    // operations pop off stack, perform operation, and store result to stack
     // operations pop off stack, perform operation, and store result to stack
     else if (to_write.type == PLUS)
     {
@@ -371,6 +372,7 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
         fprintf(asm_file, "\tSTR R0, R6, #0\n");
     }
     // find argN from Nth position into the "arguments to callee" section of stack frame
+    // find argN from Nth position into the "arguments to callee" section of stack frame
     else if (to_write.type == ARG)
     {
         fprintf(asm_file, "\tADD R0, R5, #2\n");
@@ -388,7 +390,7 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
         // branching to else based on top of stack
         fprintf(asm_file, "\tADD R6, R6, #1\n");
         fprintf(asm_file, "\tLDR R0, R6, #-1\n");
-        fprintf(asm_file, "\tBRz ELSE_%d\n", curr_nums);
+        fprintf(asm_file, "\tBRz ELSE_%d\n", curr_branch_num);
 
         // recurse until we hit an endif
         while (next_token(input_file, &to_write))
@@ -396,21 +398,21 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
             if (to_write.type == ELSE)
             {
                 seen_else = true;
-                fprintf(asm_file, "\tJMP ENDIF_%d\n", curr_nums);
-                fprintf(asm_file, "ELSE_%d\n", curr_nums);
+                fprintf(asm_file, "\tJMP ENDIF_%d\n", curr_branch_num);
+                fprintf(asm_file, "ELSE_%d\n", curr_branch_num);
             }
             else if (to_write.type == ENDIF)
             {
                 if (!seen_else)
                 {
-                    fprintf(asm_file, "ELSE_%d\n", curr_nums);
+                    fprintf(asm_file, "ELSE_%d\n", curr_branch_num);
                 }
-                fprintf(asm_file, "ENDIF_%d\n", curr_nums);
+                fprintf(asm_file, "ENDIF_%d\n", curr_branch_num);
                 break;
             }
             else
             {
-                stack_to_asm(input_file, asm_file, to_write, defining_func, branch_count, if_count, while_count);
+                stack_to_asm(input_file, asm_file, to_write, defining_func, branch_count);
             }
         }
     }
@@ -431,16 +433,17 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
         {
             if (to_write.type == ENDWHILE)
             {
-                fprintf(asm_file, "\tJMP WHILE_%d\n", curr_nums);
-                fprintf(asm_file, "ENDWHILE_%d\n", curr_nums);
+                fprintf(asm_file, "\tJMP WHILE_%d\n", curr_branch_num);
+                fprintf(asm_file, "ENDWHILE_%d\n", curr_branch_num);
                 break;
             }
             else
             {
-                stack_to_asm(input_file, asm_file, to_write, defining_func, branch_count, if_count, while_count);
+                stack_to_asm(input_file, asm_file, to_write, defining_func, branch_count);
             }
         }
     }
+    // create false branch for condition with incrementing branch label count, perform required comparison for branching
     // create false branch for condition with incrementing branch label count, perform required comparison for branching
     else if (to_write.type == LT)
     {

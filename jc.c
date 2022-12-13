@@ -15,17 +15,15 @@ int main(int argc, char **argv)
     // state variables
     token output_t;
     bool defining_func = false;
-    int branch_count = 0;
-    int if_count = 0;
-    int while_count = 0;
+    int branch_count = 0; // used to keep track of branches for comparisons
 
     // iterating through tokens
     while (next_token(input, &output_t))
     {
-        stack_to_asm(input, asm_output, output_t, &defining_func, &branch_count, &if_count, &while_count);
+        stack_to_asm(input, asm_output, output_t, &defining_func, &branch_count);
     }
 
-    // freeing memory
+    // freeing files
     fclose(input);
     fclose(asm_output);
 }
