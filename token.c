@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "token.h"
 
+// global variables for if and while loop branch labels
 int if_nums = 0;
 int while_nums = 0;
 
@@ -25,6 +26,7 @@ bool next_token(FILE *j_file, token *output)
             }
             fscanf(j_file, "%s", j_token);
         }
+        // literals
         if (strstr(j_token, "0x") != NULL)
         {
             output->type = LITERAL;
@@ -36,6 +38,7 @@ bool next_token(FILE *j_file, token *output)
             output->type = LITERAL;
             printf("%d\n", output->literal_value);
         }
+        // operations
         else
         {
             if (strcmp(j_token, "+") == 0)
@@ -157,6 +160,7 @@ bool next_token(FILE *j_file, token *output)
     }
 }
 
+// helper function for debugging NOT USED IN ASM OUTPUT
 void print_token(token to_print)
 {
     switch (to_print.type)
@@ -247,13 +251,13 @@ void print_token(token to_print)
     }
 }
 
+// asm output
 void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defining_func, int *branch_count, int *if_count, int *while_count)
 {
     if (to_write.type == LITERAL)
     {
         int const_val = to_write.literal_value & 0x00FF;
         uint16_t hiconst_val = (to_write.literal_value & 0xFF00) >> 8;
-        // printf("%d\n", (const_val & 0xFF) | (hiconst_val << 8));
         fprintf(asm_file, "\tCONST R0, #%d\n", const_val);
         fprintf(asm_file, "\tHICONST R0, #%d\n", hiconst_val);
         fprintf(asm_file, "\tADD R6, R6, #-1\n");
@@ -303,6 +307,7 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
         fprintf(asm_file, "\tLDR R7, R6, #-2\n"); // restore return address
         fprintf(asm_file, "\tRET\n");
     }
+    // operations pop off stack, perform operation, and store result to stack
     else if (to_write.type == PLUS)
     {
         fprintf(asm_file, "\tLDR R0, R6, #0\n");
@@ -365,6 +370,7 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
         fprintf(asm_file, "\tNOT R0, R0\n");
         fprintf(asm_file, "\tSTR R0, R6, #0\n");
     }
+    // find argN from Nth position into the "arguments to callee" section of stack frame
     else if (to_write.type == ARG)
     {
         fprintf(asm_file, "\tADD R0, R5, #2\n");
@@ -374,14 +380,17 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
     }
     else if (to_write.type == IF)
     {
+        // incrementing if_nums and setting up "local if context"
         if_nums++;
         bool seen_else = false;
         int curr_nums = if_nums;
-        // *if_count = *if_count + 1;
+
+        // branching to else based on top of stack
         fprintf(asm_file, "\tADD R6, R6, #1\n");
         fprintf(asm_file, "\tLDR R0, R6, #-1\n");
         fprintf(asm_file, "\tBRz ELSE_%d\n", curr_nums);
 
+        // recurse until we hit an endif
         while (next_token(input_file, &to_write))
         {
             if (to_write.type == ELSE)
@@ -407,12 +416,17 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
     }
     else if (to_write.type == WHILE)
     {
+        // increment while branching and set up "local while context"
         while_nums++;
         int curr_nums = while_nums;
+
+        // create while branch checking top of stack
         fprintf(asm_file, "WHILE_%d\n", curr_nums);
         fprintf(asm_file, "\tADD R6, R6, #1\n");
         fprintf(asm_file, "\tLDR R0, R6, #-1\n");
         fprintf(asm_file, "\tBRz ENDWHILE_%d\n", curr_nums);
+
+        // recurse until we hit an endwhile
         while (next_token(input_file, &to_write))
         {
             if (to_write.type == ENDWHILE)
@@ -427,6 +441,7 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
             }
         }
     }
+    // create false branch for condition with incrementing branch label count, perform required comparison for branching
     else if (to_write.type == LT)
     {
         fprintf(asm_file, "\tLDR R0, R6, #0\n");
@@ -502,6 +517,7 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
         fprintf(asm_file, "\tSTR R0, R6, #0\n");
         *branch_count += 1;
     }
+    // stack operations
     else if (to_write.type == DROP)
     {
         fprintf(asm_file, "\tADD R6, R6, #1\n");
