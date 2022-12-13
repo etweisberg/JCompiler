@@ -360,7 +360,7 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
     {
         fprintf(asm_file, "\tLDR R0, R6, #0\n");
         fprintf(asm_file, "\tNOT R0, R0\n");
-        fprintf(asm_file, "\tSTR R1, R6, #0\n");
+        fprintf(asm_file, "\tSTR R0, R6, #0\n");
     }
     else if (to_write.type == ARG)
     {
