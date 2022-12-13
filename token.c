@@ -242,7 +242,7 @@ void print_token(token to_print)
     }
 }
 
-void stack_to_asm(FILE *asm_file, FILE *input_file, token to_write, bool *defining_func, int *branch_count, int *if_count, int *while_count)
+void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defining_func, int *branch_count, int *if_count, int *while_count)
 {
     if (to_write.type == LITERAL)
     {
