@@ -161,7 +161,6 @@ bool next_token(FILE *j_file, token *output)
 }
 
 // helper function for debugging NOT USED IN ASM OUTPUT
-// helper function for debugging NOT USED IN ASM OUTPUT
 void print_token(token to_print)
 {
     switch (to_print.type)
@@ -252,6 +251,7 @@ void print_token(token to_print)
     }
 }
 
+//stack to asm function
 void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defining_func, int *branch_count, int *if_count, int *while_count)
 {
     if (to_write.type == LITERAL)
@@ -307,7 +307,6 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
         fprintf(asm_file, "\tLDR R7, R6, #-2\n"); // restore return address
         fprintf(asm_file, "\tRET\n");
     }
-    // operations pop off stack, perform operation, and store result to stack
     // operations pop off stack, perform operation, and store result to stack
     else if (to_write.type == PLUS)
     {
@@ -371,7 +370,6 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
         fprintf(asm_file, "\tNOT R0, R0\n");
         fprintf(asm_file, "\tSTR R0, R6, #0\n");
     }
-    // find argN from Nth position into the "arguments to callee" section of stack frame
     // find argN from Nth position into the "arguments to callee" section of stack frame
     else if (to_write.type == ARG)
     {
@@ -443,7 +441,6 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
             }
         }
     }
-    // create false branch for condition with incrementing branch label count, perform required comparison for branching
     // create false branch for condition with incrementing branch label count, perform required comparison for branching
     else if (to_write.type == LT)
     {
