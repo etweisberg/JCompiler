@@ -26,10 +26,12 @@ bool next_token(FILE *j_file, token *output)
         {
             output->type = LITERAL;
             sscanf(j_token, "%x", &(output->literal_value));
+            printf("%d\n", output->literal_value);
         }
         else if (sscanf(j_token, "%d", &(output->literal_value)) == 1)
         {
             output->type = LITERAL;
+            printf("%d\n", output->literal_value);
         }
         else
         {
@@ -318,7 +320,7 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
     {
         fprintf(asm_file, "\tLDR R0, R6, #0\n");
         fprintf(asm_file, "\tLDR R1, R6, #1\n");
-        fprintf(asm_file, "\tSUB R1, R1, R0\n");
+        fprintf(asm_file, "\tSUB R1, R0, R1\n");
         fprintf(asm_file, "\tADD R6, R6, #1\n");
         fprintf(asm_file, "\tSTR R1, R6, #0\n");
     }
@@ -326,7 +328,7 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
     {
         fprintf(asm_file, "\tLDR R0, R6, #0\n");
         fprintf(asm_file, "\tLDR R1, R6, #1\n");
-        fprintf(asm_file, "\tDIV R1, R1, R0\n");
+        fprintf(asm_file, "\tDIV R1, R0, R1\n");
         fprintf(asm_file, "\tADD R6, R6, #1\n");
         fprintf(asm_file, "\tSTR R1, R6, #0\n");
     }
@@ -334,7 +336,7 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
     {
         fprintf(asm_file, "\tLDR R0, R6, #0\n");
         fprintf(asm_file, "\tLDR R1, R6, #1\n");
-        fprintf(asm_file, "\tMOD R1, R1, R0\n");
+        fprintf(asm_file, "\tMOD R1, R0, R1\n");
         fprintf(asm_file, "\tADD R6, R6, #1\n");
         fprintf(asm_file, "\tSTR R1, R6, #0\n");
     }
