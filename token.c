@@ -6,6 +6,9 @@
 #include <stdint.h>
 #include "token.h"
 
+int if_nums = 0;
+int while_nums = 0;
+
 bool next_token(FILE *j_file, token *output)
 {
     char j_token[MAX_TOKEN_LENGTH + 1];
@@ -371,27 +374,30 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
     }
     else if (to_write.type == IF)
     {
+        if_nums++;
         bool seen_else = false;
-        *if_count = *if_count + 1;
+        int curr_nums = if_nums;
+        // *if_count = *if_count + 1;
         fprintf(asm_file, "\tADD R6, R6, #1\n");
         fprintf(asm_file, "\tLDR R0, R6, #-1\n");
-        fprintf(asm_file, "\tBRz ELSE_%d\n", *if_count);
+        fprintf(asm_file, "\tBRz ELSE_%d\n", curr_nums);
 
         while (next_token(input_file, &to_write))
         {
             if (to_write.type == ELSE)
             {
                 seen_else = true;
-                fprintf(asm_file, "\tJMP ENDIF_%d\n", *if_count);
-                fprintf(asm_file, "ELSE_%d\n", *if_count);
+                fprintf(asm_file, "\tJMP ENDIF_%d\n", curr_nums);
+                fprintf(asm_file, "ELSE_%d\n", curr_nums);
             }
             else if (to_write.type == ENDIF)
             {
                 if (!seen_else)
                 {
-                    fprintf(asm_file, "ELSE_%d\n", *if_count);
+                    fprintf(asm_file, "ELSE_%d\n", curr_nums);
                 }
-                fprintf(asm_file, "ENDIF_%d\n", *if_count);
+                fprintf(asm_file, "ENDIF_%d\n", curr_nums);
+                break;
             }
             else
             {
@@ -401,19 +407,18 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
     }
     else if (to_write.type == WHILE)
     {
-        *while_count = *while_count + 1;
+        while_nums++;
+        int curr_nums = while_nums;
+        fprintf(asm_file, "WHILE_%d\n", curr_nums);
         fprintf(asm_file, "\tADD R6, R6, #1\n");
         fprintf(asm_file, "\tLDR R0, R6, #-1\n");
-        fprintf(asm_file, "\tBRz ENDWHILE_%d\n", *while_count);
-        fprintf(asm_file, "WHILE_%d\n", *while_count);
+        fprintf(asm_file, "\tBRz ENDWHILE_%d\n", curr_nums);
         while (next_token(input_file, &to_write))
         {
             if (to_write.type == ENDWHILE)
             {
-                fprintf(asm_file, "\tADD R6, R6, #1\n");
-                fprintf(asm_file, "\tLDR R0, R6, #-1\n");
-                fprintf(asm_file, "\tJMP WHILE_%d\n", *while_count);
-                fprintf(asm_file, "ENDWHILE_%d\n", *while_count);
+                fprintf(asm_file, "\tJMP WHILE_%d\n", curr_nums);
+                fprintf(asm_file, "ENDWHILE_%d\n", curr_nums);
             }
             else
             {
