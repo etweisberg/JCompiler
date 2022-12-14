@@ -388,7 +388,7 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
         // branching to else based on top of stack
         fprintf(asm_file, "\tADD R6, R6, #1\n");
         fprintf(asm_file, "\tLDR R0, R6, #-1\n");
-        fprintf(asm_file, "\tBRz ELSE_%d\n", curr_branch_num);
+        fprintf(asm_file, "\tBRz ELSE_%d\n", curr_nums);
 
         // recurse until we hit an endif
         while (next_token(input_file, &to_write))
@@ -396,16 +396,16 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
             if (to_write.type == ELSE)
             {
                 seen_else = true;
-                fprintf(asm_file, "\tJMP ENDIF_%d\n", curr_branch_num);
-                fprintf(asm_file, "ELSE_%d\n", curr_branch_num);
+                fprintf(asm_file, "\tJMP ENDIF_%d\n", curr_nums);
+                fprintf(asm_file, "ELSE_%d\n", curr_nums);
             }
             else if (to_write.type == ENDIF)
             {
                 if (!seen_else)
                 {
-                    fprintf(asm_file, "ELSE_%d\n", curr_branch_num);
+                    fprintf(asm_file, "ELSE_%d\n", curr_nums);
                 }
-                fprintf(asm_file, "ENDIF_%d\n", curr_branch_num);
+                fprintf(asm_file, "ENDIF_%d\n", curr_nums);
                 break;
             }
             else
@@ -431,8 +431,8 @@ void stack_to_asm(FILE *input_file, FILE *asm_file, token to_write, bool *defini
         {
             if (to_write.type == ENDWHILE)
             {
-                fprintf(asm_file, "\tJMP WHILE_%d\n", curr_branch_num);
-                fprintf(asm_file, "ENDWHILE_%d\n", curr_branch_num);
+                fprintf(asm_file, "\tJMP WHILE_%d\n", curr_nums);
+                fprintf(asm_file, "ENDWHILE_%d\n", curr_nums);
                 break;
             }
             else
